@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  docker-manager:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    container_name: docker-manager-app
+    
+  # Optional: Add watchtower for auto-updates
+  # watchtower:
+  #   image: containrrr/watchtower
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   command: --interval 30 docker-manager-app

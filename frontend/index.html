@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Manager - Professional Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <div class="logo-icon">🐳</div>
+                <h1>Docker Manager</h1>
+            </div>
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-value" id="runningCount">0</span>
+                    <span class="stat-label">Running</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="stoppedCount">0</span>
+                    <span class="stat-label">Stopped</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="imagesCount">0</span>
+                    <span class="stat-label">Images</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="nav">
+                <a href="#" class="nav-item active" data-tab="containers">
+                    <span class="nav-icon">📦</span>
+                    Containers
+                </a>
+                <a href="#" class="nav-item" data-tab="images">
+                    <span class="nav-icon">💿</span>
+                    Images
+                </a>
+                <a href="#" class="nav-item" data-tab="networks">
+                    <span class="nav-icon">🌐</span>
+                    Networks
+                </a>
+                <a href="#" class="nav-item" data-tab="volumes">
+                    <span class="nav-icon">💾</span>
+                    Volumes
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Containers Tab -->
+            <div id="containers-tab" class="tab-content active">
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="btn btn-primary" id="runContainerBtn">
+                        <span class="btn-icon">▶️</span>
+                        Create Container
+                    </button>
+                    <button class="btn btn-secondary" id="pullImageBtn">
+                        <span class="btn-icon">📥</span>
+                        Pull Image
+                    </button>
+                    <button class="btn btn-secondary" id="refreshBtn">
+                        <span class="btn-icon">🔄</span>
+                        Refresh
+                    </button>
+                </div>
+
+                <!-- Containers Grid -->
+                <div class="containers-grid" id="containersGrid">
+                    <!-- Container cards will be dynamically loaded -->
+                </div>
+            </div>
+
+            <!-- Images Tab -->
+            <div id="images-tab" class="tab-content">
+                <div class="quick-actions">
+                    <button class="btn btn-primary" id="pullNewImageBtn">
+                        <span class="btn-icon">📥</span>
+                        Pull New Image
+                    </button>
+                    <button class="btn btn-danger" id="pruneImagesBtn">
+                        <span class="btn-icon">🗑️</span>
+                        Prune Unused
+                    </button>
+                </div>
+                <div class="images-grid" id="imagesGrid">
+                    <!-- Image cards will be dynamically loaded -->
+                </div>
+            </div>
+
+            <!-- Other tabs content -->
+            <div id="networks-tab" class="tab-content">
+                <div class="coming-soon">
+                    <h3>Networks Management</h3>
+                    <p>Feature coming soon...</p>
+                </div>
+            </div>
+
+            <div id="volumes-tab" class="tab-content">
+                <div class="coming-soon">
+                    <h3>Volumes Management</h3>
+                    <p>Feature coming soon...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Create Container Modal -->
+    <div id="runContainerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Container</h3>
+                <span class="close" data-modal="runContainerModal">&times;</span>
+            </div>
+            <form id="runContainerForm" class="form">
+                <div class="form-group">
+                    <label for="imageName">Image Name *</label>
+                    <input type="text" id="imageName" placeholder="e.g., nginx" required>
+                </div>
+                <div class="form-group">
+                    <label for="tagName">Tag Name</label>
+                    <input type="text" id="tagName" placeholder="latest" value="latest">
+                </div>
+                <div class="form-group">
+                    <label for="containerName">Container Name *</label>
+                    <input type="text" id="containerName" placeholder="my-app-container" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-modal="runContainerModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Container</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pull Image Modal -->
+    <div id="pullImageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Pull Docker Image</h3>
+                <span class="close" data-modal="pullImageModal">&times;</span>
+            </div>
+            <form id="pullImageForm" class="form">
+                <div class="form-group">
+                    <label for="pullImageName">Image Name *</label>
+                    <input type="text" id="pullImageName" placeholder="e.g., nginx" required>
+                </div>
+                <div class="form-group">
+                    <label for="pullTagName">Tag Name</label>
+                    <input type="text" id="pullTagName" placeholder="latest" value="latest">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-modal="pullImageModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Pull Image</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
