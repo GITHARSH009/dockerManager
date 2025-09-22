@@ -11,6 +11,10 @@ RUN npm install
 COPY backend/ ./
 COPY frontend/ ./frontend/
 
+#Set a non-root user
+# RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# USER appuser
+
 # Expose both ports - 3000 for the main app, 80 for proxy
 EXPOSE 3000 80
 

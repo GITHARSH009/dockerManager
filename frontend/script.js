@@ -204,6 +204,19 @@ function renderContainers() {
                     </div>
                 </div>
 
+                ${isRunning && container.name!=='docker-manager-app' ? `
+                <div class="proxy-info">
+                    <div class="info-row">
+                        <span class="info-label">Proxy URL:</span>
+                        <span class="info-value">
+                            <a href="http://${container.name}.localhost" target="_blank" class="proxy-link">
+                                ${container.name}.localhost
+                            </a>
+                        </span>
+                    </div>
+                </div>
+                ` : ''}
+
                 <div class="container-actions">
                     ${isRunning ? 
                         `<button class="btn btn-danger btn-small" onclick="containerAction('${container.id}', 'stop')">
