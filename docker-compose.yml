@@ -4,17 +4,14 @@ services:
   docker-manager:
     build: .
     ports:
-      - "3000:3000"
+      - "3000:3000"    # Main application port
+      - "80:80" 
+    network_mode: bridge       # Proxy server port
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - NODE_ENV=production
+      - PORT=3000
+      - PROXY_PORT=80
+      - PROXY_HOST=localhost  
     restart: unless-stopped
     container_name: docker-manager-app
-    
-  # Optional: Add watchtower for auto-updates
-  # watchtower:
-  #   image: containrrr/watchtower
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   command: --interval 30 docker-manager-app

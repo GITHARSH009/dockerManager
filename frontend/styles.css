@@ -591,3 +591,161 @@ body {
         flex-direction: column;
     }
 }
+/* Proxy Features CSS Additions */
+
+/* Proxy info in container cards */
+.proxy-info {
+    background: rgba(102, 126, 234, 0.1);
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    border-left: 4px solid #667eea;
+}
+
+.proxy-link {
+    color: #667eea;
+    text-decoration: none;
+    font-family: 'Monaco', monospace;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.proxy-link:hover {
+    text-decoration: underline;
+}
+
+/* Info button */
+.btn-info {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+}
+
+.btn-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(23, 162, 184, 0.4);
+}
+
+/* Proxy Access Modal */
+.proxy-modal-content {
+    padding: 1.5rem;
+}
+
+.proxy-info-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.proxy-info-card h4 {
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.proxy-description {
+    color: #666;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.proxy-url-container {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+}
+
+.proxy-url-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-family: 'Monaco', monospace;
+    font-size: 0.9rem;
+    background: white;
+    color: #667eea;
+    font-weight: 500;
+}
+
+.proxy-url-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.proxy-instructions {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.proxy-instructions h5 {
+    color: #333;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.proxy-instructions ol {
+    margin-left: 1.25rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+.proxy-instructions li {
+    margin-bottom: 0.5rem;
+}
+
+.proxy-instructions code {
+    background: #f1f3f4;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Monaco', monospace;
+    font-size: 0.85rem;
+    color: #d63384;
+    font-weight: 500;
+}
+
+#hostsEntry {
+    background: #f1f3f4;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-family: 'Monaco', monospace;
+    font-size: 0.85rem;
+    color: #d63384;
+    font-weight: 500;
+    display: block;
+    margin: 0.5rem 0;
+    border: 1px dashed #dee2e6;
+}
+
+.proxy-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.proxy-actions .btn {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+}
+
+/* Responsive adjustments for proxy modal */
+@media (max-width: 768px) {
+    .proxy-url-container {
+        flex-direction: column;
+    }
+    
+    .proxy-actions {
+        flex-direction: column;
+    }
+    
+    .proxy-actions .btn {
+        width: 100%;
+    }
+}

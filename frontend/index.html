@@ -171,6 +171,38 @@
         </div>
     </div>
 
+    <!-- Proxy Access Modal -->
+    <div id="proxyAccessModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Container Access Information</h3>
+                <span class="close" data-modal="proxyAccessModal">&times;</span>
+            </div>
+            <div class="proxy-modal-content">
+                <div class="proxy-info-card">
+                    <h4>Access Your Container</h4>
+                    <p class="proxy-description">Your container is accessible through the following URL:</p>
+                    <div class="proxy-url-container">
+                        <input type="text" id="proxyUrl" readonly class="proxy-url-input">
+                        <button class="btn btn-secondary btn-small" onclick="copyProxyUrl()">Copy</button>
+                    </div>
+                    <div class="proxy-instructions">
+                        <h5>How to Access:</h5>
+                        <ol>
+                            <li>Add the following to your <code>/etc/hosts</code> file (Linux/Mac) or <code>C:\Windows\System32\drivers\etc\hosts</code> (Windows):</li>
+                            <li><code id="hostsEntry">127.0.0.1 container-name.localhost</code></li>
+                            <li>Then click the link below or paste the URL in your browser</li>
+                        </ol>
+                    </div>
+                    <div class="proxy-actions">
+                        <a id="proxyDirectLink" href="#" target="_blank" class="btn btn-primary">Open Container</a>
+                        <button class="btn btn-secondary" onclick="copyHostsEntry()">Copy Hosts Entry</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Loading Spinner -->
     <div id="loadingSpinner" class="loading-spinner">
         <div class="spinner"></div>

@@ -331,6 +331,52 @@ function showInspectModal(inspectData) {
     document.body.appendChild(modal);
 }
 
+// Open proxy access modal
+function openProxyModal(containerName) {
+    const proxyUrl = `http://${containerName}.localhost`;
+    const hostsEntry = `127.0.0.1 ${containerName}.localhost`;
+    
+    document.getElementById('proxyUrl').value = proxyUrl;
+    document.getElementById('proxyDirectLink').href = proxyUrl;
+    document.getElementById('hostsEntry').textContent = hostsEntry;
+    
+    openModal('proxyAccessModal');
+}
+
+// Copy proxy URL to clipboard
+function copyProxyUrl() {
+    const proxyUrlInput = document.getElementById('proxyUrl');
+    proxyUrlInput.select();
+    proxyUrlInput.setSelectionRange(0, 99999); // For mobile devices
+    
+    navigator.clipboard.writeText(proxyUrlInput.value).then(() => {
+        showToast('Proxy URL copied to clipboard!', 'success');
+    }).catch(() => {
+        // Fallback for older browsers
+        document.execCommand('copy');
+        showToast('Proxy URL copied to clipboard!', 'success');
+    });
+}
+
+// Copy hosts entry to clipboard
+function copyHostsEntry() {
+    const hostsEntry = document.getElementById('hostsEntry').textContent;
+    
+    navigator.clipboard.writeText(hostsEntry).then(() => {
+        showToast('Hosts entry copied to clipboard!', 'success');
+    }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = hostsEntry;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('Hosts entry copied to clipboard!', 'success');
+    });
+}
+
 // Create container from image
 function createContainerFromImage(imageName) {
     const [name, tag] = imageName.split(':');
