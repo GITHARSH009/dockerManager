@@ -52,7 +52,7 @@ app.get("/api/containers", async (req, res) => {
         res.status(200).send(containerDetails);
     } catch (error) {
         console.error("Error in fetching the containers:", error);
-        return res.status(500).send("Error fetching Containers");
+        return res.status(500).send("Error fetching Containers, Please refresh the page..");
     }
 });
 
@@ -63,7 +63,7 @@ app.get("/api/images", async (req, res) => {
         res.status(200).json({ message: "Images fetched successfully", data: imageDetails });
     } catch (error) {
         console.error("Error in fetching the images:", error);
-        return res.status(500).send("Error fetching Images");
+        return res.status(500).send("Error fetching Images, Please refresh the page..");
     }
 });
 
@@ -96,7 +96,7 @@ app.post("/api/create-container", async (req, res) => {
         return res.status(200).json({ message: "Container created successfully", data: container });
     } catch (error) {
         console.error("Error in creating the container:", error);
-        return res.status(500).send(error.message);
+        return res.status(500).send(error.message," Please refresh the page..");
     }
 });
 
@@ -112,7 +112,7 @@ app.post("/api/pull-image", async (req, res) => {
         res.status(200).json({ message: "Image pulled successfully", data: image });
     } catch (error) {
         console.error("Error in pulling the image:", error);
-        return res.status(500).send(error.message);
+        return res.status(500).send(error.message," Please refresh the page..");
     }
 });
 

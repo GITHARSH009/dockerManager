@@ -1,7 +1,11 @@
 var Docker = require('dockerode');
+const { validateOperation } = require('./validation');
+
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
 
 const pullImage = async (imageName, tagName = 'latest') => {
+    validateOperation('pull');
+    
     const image = `${imageName}:${tagName}`;
     return new Promise((resolve, reject) => {
         docker.pull(image, (err, stream) => {
@@ -31,6 +35,8 @@ const pullImage = async (imageName, tagName = 'latest') => {
 };
 
 const imageList = async () => {
+    validateOperation('list');
+    
     return new Promise((resolve, reject) => {
         docker.listImages((err, images) => {
             if (err) {
@@ -42,8 +48,9 @@ const imageList = async () => {
     });
 };
 
-
 const containerList = async (options = {all: true}) => {
+    validateOperation('list');
+    
     return new Promise((resolve, reject) => {
         docker.listContainers(options, (err, containers) => {
             if (err) {
@@ -55,8 +62,9 @@ const containerList = async (options = {all: true}) => {
     });
 };
 
-
 const performContainerAction = async (containerId, actionType) => {
+    validateOperation(actionType);
+    
     return new Promise((resolve, reject) => {
         const container = docker.getContainer(containerId);
         
@@ -86,7 +94,6 @@ const performContainerAction = async (containerId, actionType) => {
     });
 };
 
-
 const createContainer = async (imageName, tagName = 'latest', containerName) => {
     const image = `${imageName}:${tagName}`;
     
@@ -105,17 +112,23 @@ const createContainer = async (imageName, tagName = 'latest', containerName) => 
         await pullImage(imageName, tagName);
     }
     
+    const containerConfig = {
+        Image: image,
+        name: containerName,
+        Tty: true,
+        HostConfig: {
+            AutoRemove: true,
+            PublishAllPorts: true,
+            // Removed docker socket binding for user-created containers
+            // Users shouldn't create containers with management privileges
+        }
+    };
+    
+    // Validate before creation
+    validateOperation('create', containerConfig);
+    
     return new Promise((resolve, reject) => {
-        docker.createContainer({
-            Image: image,
-            name: containerName,
-            Tty: true,
-            HostConfig: {
-                AutoRemove: true,
-                PublishAllPorts: true,
-                Binds: ['/var/run/docker.sock:/var/run/docker.sock']
-            }
-        }, (err, container) => {
+        docker.createContainer(containerConfig, (err, container) => {
             if (err) {
                 console.error("Error in creating the container:", err);
                 return reject(new Error("Error in creating the container"));
@@ -124,7 +137,6 @@ const createContainer = async (imageName, tagName = 'latest', containerName) => 
         });
     });
 };
-
 
 const formatContainerData = (containers) => {
     return containers.map((container) => ({
@@ -135,7 +147,6 @@ const formatContainerData = (containers) => {
     }));
 };
 
-
 const formatImageData = (images) => {
     return images.map((image) => ({
         id: image.Id,
@@ -145,7 +156,6 @@ const formatImageData = (images) => {
         size: (image.Size / (1024 * 1024)).toFixed(2) + ' MB',
     }));
 };
-
 
 const setupDockerEvents = (proxyMap) => {
     docker.getEvents((err, stream) => {

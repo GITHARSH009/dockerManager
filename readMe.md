@@ -226,4 +226,33 @@ Found a security concern? Please report responsibly:
 
 ---
 
+## Security Features
+- ✅ Blocks dangerous container operations (exec, attach)
+- ✅ Prevents privileged container creation  
+- ✅ Validates volume mount security
+- ✅ Blocks system directory access
+- ✅ Application-level security validation
+
+🔐 Security Architecture & Decisions
+Security Model Implemented
+
+Application-level validation (not system-level security)
+Input sanitization before Docker API calls
+Operation whitelisting approach
+Mount path validation to prevent dangerous binds
+
+Why Root User vs Non-Root Trade-off
+Problem: Docker socket (/var/run/docker.sock) requires root/docker group access
+Solutions Considered:
+
+❌ Rootless Docker: Requires additional user setup (adoption barrier)
+❌ API Proxy Pattern: Adds complexity + larger image size
+❌ Docker group: Equivalent to root access anyway
+✅ Root + Application validation: Industry standard approach
+
+Decision: Run as root with comprehensive input validation (same as Portainer, Docker Desktop)
+
+## Trust & Safety
+This image implements security best practices and validates all Docker operations before execution.
+
 **Remember**: This tool is designed for **personal/development use**. For enterprise environments, consider additional security layers and monitoring.
