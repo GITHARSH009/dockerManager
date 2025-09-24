@@ -117,7 +117,7 @@ const createContainer = async (imageName, tagName = 'latest', containerName) => 
         name: containerName,
         Tty: true,
         HostConfig: {
-            AutoRemove: true,
+            AutoRemove: false,
             PublishAllPorts: true,
             // Removed docker socket binding for user-created containers
             // Users shouldn't create containers with management privileges

@@ -312,7 +312,8 @@ async function containerAction(containerId, actionType) {
                 showInspectModal(result.data);
             } else {
                 showToast(`Container ${actionType}ed successfully`, 'success');
-                loadContainers();
+                // Auto-refresh containers after any action
+                await loadContainers();
             }
         } else {
             throw new Error(`Failed to ${actionType} container`);
@@ -320,6 +321,8 @@ async function containerAction(containerId, actionType) {
     } catch (error) {
         showToast(`Failed to ${actionType} container`, 'error');
         console.error(`Error ${actionType}ing container:`, error);
+        // Refresh even on error to sync UI state
+        await loadContainers();
     } finally {
         showLoading(false);
     }
@@ -425,7 +428,8 @@ async function handleCreateContainer(e) {
             showToast(`Container "${containerName}" created successfully!`, 'success');
             closeModal('runContainerModal');
             document.getElementById('runContainerForm').reset();
-            loadContainers();
+            // Auto-refresh containers after creation
+            await loadContainers();
         } else {
             throw new Error(result.message || 'Failed to create container');
         }
@@ -460,7 +464,8 @@ async function handlePullImage(e) {
             showToast(`Image "${imageName}:${tagName}" pulled successfully!`, 'success');
             closeModal('pullImageModal');
             document.getElementById('pullImageForm').reset();
-            loadImages();
+            // Auto-refresh images after pulling
+            await loadImages();
         } else {
             throw new Error(result.message || 'Failed to pull image');
         }
