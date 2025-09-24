@@ -48,16 +48,23 @@ const imageList = async () => {
     });
 };
 
-const volumeList=async(options={all:true})=>{
+const volumeList=async()=>{
     validateOperation('list');
 
     return new Promise((resolve,reject)=>{
-        docker.listVolumes(options,(err,volumes)=>{
+        docker.listVolumes((err,data)=>{
             if(err){
                 console.error("Error in fetching the volumes:",err);
                 return reject("Error fetching Volumes");
             }
-            resolve(volumes);
+            // Docker API returns an object with 'Volumes' property, not direct array
+                if (data && data.Volumes) {
+                    resolve(data.Volumes);
+                } else {
+                    // Handle case where no volumes exist (Docker returns { Volumes: null })
+                    console.log("No volumes found or unexpected response format");
+                    resolve([]);
+                }
         });
     });
 };
