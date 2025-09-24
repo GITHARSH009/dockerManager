@@ -2,6 +2,9 @@
 const AppState = {
     containers: [],
     images: [],
+    networks :[],
+    volumes : [],
+    systemInfo : null,
     activeTab: 'containers',
     isLoading: false
 };
@@ -17,7 +20,11 @@ const elements = {
     toastContainer: document.getElementById('toastContainer'),
     runningCount: document.getElementById('runningCount'),
     stoppedCount: document.getElementById('stoppedCount'),
-    imagesCount: document.getElementById('imagesCount')
+    imagesCount: document.getElementById('imagesCount'),
+    networksGrid: document.getElementById('networksGrid'),
+    volumesGrid: document.getElementById('volumesGrid'),
+    systemStats: document.getElementById('systemStats'),
+    systemInfo: document.getElementById('systemInfo')
 };
 
 // Initialize app when DOM is loaded
@@ -61,12 +68,42 @@ function setupEventListeners() {
         loadInitialData();
     });
 
+    document.getElementById('createNetworkBtn').addEventListener('click', () => {
+    openModal('createNetworkModal');
+});
+
+document.getElementById('createVolumeBtn').addEventListener('click', () => {
+    openModal('createVolumeModal');
+});
+
+document.getElementById('loadSystemInfoBtn').addEventListener('click', () => {
+    loadSystemInfo();
+});
+
+document.getElementById('pruneNetworksBtn').addEventListener('click', () => {
+    pruneNetworks();
+});
+
+document.getElementById('pruneVolumesBtn').addEventListener('click', () => {
+    pruneVolumes();
+});
+
+document.getElementById('pruneContainersBtn').addEventListener('click', () => {
+    pruneContainers();
+});
+
+document.getElementById('pruneImagesBtn').addEventListener('click', () => {
+    pruneImages();
+});
+
     // Modal event listeners
     setupModalEventListeners();
 
     // Form submissions
     document.getElementById('runContainerForm').addEventListener('submit', handleCreateContainer);
     document.getElementById('pullImageForm').addEventListener('submit', handlePullImage);
+    document.getElementById('createNetworkForm').addEventListener('submit', handleCreateNetwork);
+    document.getElementById('createVolumeForm').addEventListener('submit', handleCreateVolume);
 }
 
 // Setup modal event listeners
@@ -112,6 +149,10 @@ function switchTab(tabName) {
         loadContainers();
     } else if (tabName === 'images') {
         loadImages();
+    } else if (tabName === 'networks') {
+        loadNetworks();
+    } else if (tabName === 'volumes') {
+        loadVolumes();
     }
 }
 
@@ -121,7 +162,9 @@ async function loadInitialData() {
     try {
         await Promise.all([
             loadContainers(),
-            loadImages()
+            loadImages(),
+            loadNetworks(),
+            loadVolumes()
         ]);
         updateStats();
     } catch (error) {
@@ -163,6 +206,436 @@ async function loadImages() {
         AppState.images = [];
         renderImages();
         updateStats();
+    }
+}
+// Load networks from API
+async function loadNetworks() {
+    try {
+        const response = await fetch(`${API_BASE}/networks`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch networks');
+        }
+        const result = await response.json();
+        AppState.networks = Array.isArray(result.data) ? result.data : [];
+        renderNetworks();
+        updateStats();
+    } catch (error) {
+        console.error('Error loading networks:', error);
+        AppState.networks = [];
+        renderNetworks();
+        updateStats();
+        // Don't show toast for empty networks - it's normal
+    }
+}
+
+// Load volumes from API
+async function loadVolumes() {
+    try {
+        const response = await fetch(`${API_BASE}/volumes`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch volumes');
+        }
+        const result = await response.json();
+        AppState.volumes = Array.isArray(result.data) ? result.data : [];
+        renderVolumes();
+        updateStats();
+    } catch (error) {
+        console.error('Error loading volumes:', error);
+        AppState.volumes = [];
+        renderVolumes();
+        updateStats();
+        // Don't show toast for empty volumes - it's normal
+    }
+}
+
+// Load system info
+async function loadSystemInfo() {
+    try {
+        const response = await fetch(`${API_BASE}/system-info`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch system info');
+        }
+        const result = await response.json();
+        AppState.systemInfo = result.data;
+        renderSystemInfo();
+        document.getElementById('systemInfo').style.display = 'block';
+    } catch (error) {
+        showToast('Failed to load system info', 'error');
+        console.error('Error loading system info:', error);
+    }
+}
+
+// Render networks in the grid
+function renderNetworks() {
+    if (!elements.networksGrid) return;
+
+    // Ensure we have a valid array
+    const networks = Array.isArray(AppState.networks) ? AppState.networks : [];
+
+    if (networks.length === 0) {
+        elements.networksGrid.innerHTML = `
+            <div class="empty-state">
+                <h3>No networks found</h3>
+                <p>Create your first network to get started!</p>
+            </div>
+        `;
+        return;
+    }
+
+    elements.networksGrid.innerHTML = networks.map(network => {
+        // Safely access properties with fallbacks
+        const name = network?.Name || 'Unknown';
+        const id = network?.Id || '';
+        const driver = network?.Driver || 'Unknown';
+        const scope = network?.Scope || 'Unknown';
+        const created = network?.Created ? new Date(network.Created).toLocaleDateString() : 'N/A';
+        
+        return `
+            <div class="network-card">
+                <div class="container-header">
+                    <div>
+                        <div class="network-name">${name}</div>
+                        <div class="network-driver">${driver}</div>
+                    </div>
+                </div>
+                
+                <div class="network-info">
+                    <div class="info-row">
+                        <span class="info-label">ID:</span>
+                        <span class="info-value">${id.substring(0, 12)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Scope:</span>
+                        <span class="network-scope">${scope}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Created:</span>
+                        <span class="info-value">${created}</span>
+                    </div>
+                </div>
+
+                <div class="container-actions">
+                    <button class="btn btn-secondary btn-small" onclick="inspectNetwork('${id}')">
+                        <span class="btn-icon">🔍</span> Inspect
+                    </button>
+                    ${!['bridge', 'host', 'none'].includes(name) ? `
+                    <button class="btn btn-danger btn-small" onclick="deleteNetwork('${id}')">
+                        <span class="btn-icon">🗑️</span> Delete
+                    </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Render volumes in the grid
+function renderVolumes() {
+    if (!elements.volumesGrid) return;
+
+    // Ensure we have a valid array
+    const volumes = Array.isArray(AppState.volumes) ? AppState.volumes : [];
+
+    if (volumes.length === 0) {
+        elements.volumesGrid.innerHTML = `
+            <div class="empty-state">
+                <h3>No volumes found</h3>
+                <p>Create your first volume to get started!</p>
+            </div>
+        `;
+        return;
+    }
+
+    elements.volumesGrid.innerHTML = volumes.map(volume => {
+        // Safely access properties with fallbacks
+        const name = volume?.Name || 'Unknown';
+        const driver = volume?.Driver || 'Unknown';
+        const mountpoint = volume?.Mountpoint || 'N/A';
+        const createdAt = volume?.CreatedAt ? new Date(volume.CreatedAt).toLocaleDateString() : 'N/A';
+        
+        return `
+            <div class="volume-card">
+                <div class="container-header">
+                    <div>
+                        <div class="volume-name">${name}</div>
+                        <div class="volume-driver">${driver}</div>
+                    </div>
+                </div>
+                
+                <div class="volume-info">
+                    <div class="info-row">
+                        <span class="info-label">Mountpoint:</span>
+                        <span class="info-value">${mountpoint}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Created:</span>
+                        <span class="info-value">${createdAt}</span>
+                    </div>
+                </div>
+
+                <div class="container-actions">
+                    <button class="btn btn-secondary btn-small" onclick="inspectVolume('${name}')">
+                        <span class="btn-icon">🔍</span> Inspect
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="deleteVolume('${name}')">
+                        <span class="btn-icon">🗑️</span> Delete
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Render system info
+function renderSystemInfo() {
+    if (!AppState.systemInfo || !elements.systemStats) return;
+    
+    const info = AppState.systemInfo;
+    elements.systemStats.innerHTML = `
+        <div class="system-stat">
+            <span class="system-stat-value">${info.Containers || 0}</span>
+            <span class="system-stat-label">Total Containers</span>
+        </div>
+        <div class="system-stat">
+            <span class="system-stat-value">${info.ContainersRunning || 0}</span>
+            <span class="system-stat-label">Running</span>
+        </div>
+        <div class="system-stat">
+            <span class="system-stat-value">${info.Images || 0}</span>
+            <span class="system-stat-label">Images</span>
+        </div>
+        <div class="system-stat">
+            <span class="system-stat-value">${Math.round((info.MemTotal || 0) / 1024 / 1024 / 1024)} GB</span>
+            <span class="system-stat-label">Total Memory</span>
+        </div>
+    `;
+}
+
+// Network actions
+async function inspectNetwork(networkId) {
+    try {
+        const response = await fetch(`${API_BASE}/network-inspect/${networkId}`);
+        const result = await response.json();
+        
+        if (response.ok) {
+            showInspectModal(result.data, 'Network Details');
+        } else {
+            throw new Error('Failed to inspect network');
+        }
+    } catch (error) {
+        showToast('Failed to inspect network', 'error');
+        console.error('Error inspecting network:', error);
+    }
+}
+
+async function deleteNetwork(networkId) {
+    if (!confirm('Are you sure you want to delete this network?')) return;
+    
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_BASE}/delete-network`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ networkId })
+        });
+        
+        if (response.ok) {
+            showToast('Network deleted successfully', 'success');
+            await loadNetworks();
+        } else {
+            throw new Error('Failed to delete network');
+        }
+    } catch (error) {
+        showToast('Failed to delete network', 'error');
+        console.error('Error deleting network:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Volume actions
+async function inspectVolume(volumeName) {
+    try {
+        const response = await fetch(`${API_BASE}/volume-inspect/${volumeName}`);
+        const result = await response.json();
+        
+        if (response.ok) {
+            showInspectModal(result.data, 'Volume Details');
+        } else {
+            throw new Error('Failed to inspect volume');
+        }
+    } catch (error) {
+        showToast('Failed to inspect volume', 'error');
+        console.error('Error inspecting volume:', error);
+    }
+}
+
+async function deleteVolume(volumeName) {
+    if (!confirm('Are you sure you want to delete this volume?')) return;
+    
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_BASE}/delete-volume`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ volumeName })
+        });
+        
+        if (response.ok) {
+            showToast('Volume deleted successfully', 'success');
+            await loadVolumes();
+        } else {
+            throw new Error('Failed to delete volume');
+        }
+    } catch (error) {
+        showToast('Failed to delete volume', 'error');
+        console.error('Error deleting volume:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Prune functions
+async function pruneNetworks() {
+    if (!confirm('Are you sure you want to prune unused networks? This cannot be undone.')) return;
+    
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_BASE}/prune-networks`, { method: 'DELETE' });
+        if (response.ok) {
+            showToast('Unused networks pruned successfully', 'success');
+            await loadNetworks();
+        } else {
+            throw new Error('Failed to prune networks');
+        }
+    } catch (error) {
+        showToast('Failed to prune networks', 'error');
+        console.error('Error pruning networks:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function pruneVolumes() {
+    if (!confirm('Are you sure you want to prune unused volumes? This cannot be undone.')) return;
+    
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_BASE}/prune-volumes`, { method: 'DELETE' });
+        if (response.ok) {
+            showToast('Unused volumes pruned successfully', 'success');
+            await loadVolumes();
+        } else {
+            throw new Error('Failed to prune volumes');
+        }
+    } catch (error) {
+        showToast('Failed to prune volumes', 'error');
+        console.error('Error pruning volumes:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function pruneContainers() {
+    if (!confirm('Are you sure you want to prune unused containers? This cannot be undone.')) return;
+    
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_BASE}/prune-containers`, { method: 'DELETE' });
+        if (response.ok) {
+            showToast('Unused containers pruned successfully', 'success');
+            await loadContainers();
+        } else {
+            throw new Error('Failed to prune containers');
+        }
+    } catch (error) {
+        showToast('Failed to prune containers', 'error');
+        console.error('Error pruning containers:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function pruneImages() {
+    if (!confirm('Are you sure you want to prune unused images? This cannot be undone.')) return;
+    
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_BASE}/prune-images`, { method: 'DELETE' });
+        if (response.ok) {
+            showToast('Unused images pruned successfully', 'success');
+            await loadImages();
+        } else {
+            throw new Error('Failed to prune images');
+        }
+    } catch (error) {
+        showToast('Failed to prune images', 'error');
+        console.error('Error pruning images:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Form handlers for new modals
+async function handleCreateNetwork(e) {
+    e.preventDefault();
+    
+    const networkName = document.getElementById('networkName').value;
+    
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_BASE}/create-network`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ networkName })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showToast(`Network "${networkName}" created successfully!`, 'success');
+            closeModal('createNetworkModal');
+            document.getElementById('createNetworkForm').reset();
+            await loadNetworks();
+        } else {
+            throw new Error(result.message || 'Failed to create network');
+        }
+    } catch (error) {
+        showToast(`Failed to create network: ${error.message}`, 'error');
+        console.error('Error creating network:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function handleCreateVolume(e) {
+    e.preventDefault();
+    
+    const volumeName = document.getElementById('volumeName').value;
+    
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_BASE}/create-volume`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ volumeName })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showToast(`Volume "${volumeName}" created successfully!`, 'success');
+            closeModal('createVolumeModal');
+            document.getElementById('createVolumeForm').reset();
+            await loadVolumes();
+        } else {
+            throw new Error(result.message || 'Failed to create volume');
+        }
+    } catch (error) {
+        showToast(`Failed to create volume: ${error.message}`, 'error');
+        console.error('Error creating volume:', error);
+    } finally {
+        showLoading(false);
     }
 }
 
@@ -329,13 +802,13 @@ async function containerAction(containerId, actionType) {
 }
 
 // Show container inspect data
-function showInspectModal(inspectData) {
+function showInspectModal(inspectData, title = 'Container Details') {
     const modal = document.createElement('div');
     modal.className = 'modal show';
     modal.innerHTML = `
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
-                <h3>Container Details</h3>
+                <h3>${title}</h3>
                 <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
             </div>
             <div style="padding: 1.5rem;">
@@ -514,10 +987,13 @@ function showToast(message, type = 'info') {
 }
 
 function updateStats() {
-    const running = AppState.containers.filter(c => c.status === 'running').length;
-    const stopped = AppState.containers.filter(c => c.status !== 'running').length;
+    const containers = Array.isArray(AppState.containers) ? AppState.containers : [];
+    const images = Array.isArray(AppState.images) ? AppState.images : [];
+    
+    const running = containers.filter(c => c?.status === 'running').length;
+    const stopped = containers.filter(c => c?.status && c.status !== 'running').length;
     
     if (elements.runningCount) elements.runningCount.textContent = running;
     if (elements.stoppedCount) elements.stoppedCount.textContent = stopped;
-    if (elements.imagesCount) elements.imagesCount.textContent = AppState.images.length;
+    if (elements.imagesCount) elements.imagesCount.textContent = images.length;
 }

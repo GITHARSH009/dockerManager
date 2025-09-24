@@ -101,18 +101,72 @@
                 </div>
             </div>
 
-            <!-- Other tabs content -->
+            <!-- Networks Tab -->
             <div id="networks-tab" class="tab-content">
-                <div class="coming-soon">
-                    <h3>Networks Management</h3>
-                    <p>Feature coming soon...</p>
+                <!-- System Info Section -->
+                <div id="systemInfo" class="system-info" style="display: none;">
+                    <h3>System Information</h3>
+                    <div class="system-stats" id="systemStats">
+                        <!-- System stats will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="btn btn-primary" id="createNetworkBtn">
+                        <span class="btn-icon">🌐</span>
+                        Create Network
+                    </button>
+                    <button class="btn btn-info" id="loadSystemInfoBtn">
+                        <span class="btn-icon">📊</span>
+                        System Info
+                    </button>
+                </div>
+
+                <!-- Prune Actions -->
+                <div class="prune-actions">
+                    <h4>Cleanup Actions</h4>
+                    <div class="quick-actions">
+                        <button class="btn btn-warning" id="pruneNetworksBtn">
+                            <span class="btn-icon">🧹</span>
+                            Prune Networks
+                        </button>
+                    </div>
+                </div>
+
+                <div class="networks-grid" id="networksGrid">
+                    <!-- Network cards will be dynamically loaded -->
                 </div>
             </div>
 
             <div id="volumes-tab" class="tab-content">
-                <div class="coming-soon">
-                    <h3>Volumes Management</h3>
-                    <p>Feature coming soon...</p>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" id="createVolumeBtn">
+                        <span class="btn-icon">💾</span>
+                        Create Volume
+                    </button>
+                </div>
+
+                <!-- Prune Actions -->
+                <div class="prune-actions">
+                    <h4>Cleanup Actions</h4>
+                    <div class="quick-actions">
+                        <button class="btn btn-warning" id="pruneVolumesBtn">
+                            <span class="btn-icon">🧹</span>
+                            Prune Volumes
+                        </button>
+                        <button class="btn btn-warning" id="pruneContainersBtn">
+                            <span class="btn-icon">🧹</span>
+                            Prune Containers
+                        </button>
+                        <button class="btn btn-warning" id="pruneImagesBtn">
+                            <span class="btn-icon">🧹</span>
+                            Prune Images
+                        </button>
+                    </div>
+                </div>
+
+                <div class="volumes-grid" id="volumesGrid">
+                    <!-- Volume cards will be dynamically loaded -->
                 </div>
             </div>
         </main>
@@ -166,6 +220,46 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" data-modal="pullImageModal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Pull Image</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Network Modal -->
+    <div id="createNetworkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Network</h3>
+                <span class="close" data-modal="createNetworkModal">&times;</span>
+            </div>
+            <form id="createNetworkForm" class="form">
+                <div class="form-group">
+                    <label for="networkName">Network Name *</label>
+                    <input type="text" id="networkName" placeholder="my-network" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-modal="createNetworkModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Network</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Volume Modal -->
+    <div id="createVolumeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Volume</h3>
+                <span class="close" data-modal="createVolumeModal">&times;</span>
+            </div>
+            <form id="createVolumeForm" class="form">
+                <div class="form-group">
+                    <label for="volumeName">Volume Name *</label>
+                    <input type="text" id="volumeName" placeholder="my-volume" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-modal="createVolumeModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Volume</button>
                 </div>
             </form>
         </div>

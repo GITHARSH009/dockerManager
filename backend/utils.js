@@ -48,6 +48,33 @@ const imageList = async () => {
     });
 };
 
+const volumeList=async(options={all:true})=>{
+    validateOperation('list');
+
+    return new Promise((resolve,reject)=>{
+        docker.listVolumes(options,(err,volumes)=>{
+            if(err){
+                console.error("Error in fetching the volumes:",err);
+                return reject("Error fetching Volumes");
+            }
+            resolve(volumes);
+        });
+    });
+};
+
+const networkList=async(options={all:true})=>{
+    validateOperation('list');
+    return new Promise((resolve,reject)=>{
+        docker.listNetworks(options,(err,networks)=>{
+            if(err){
+                console.error("Error in fetching the networks:",err);
+                return reject("Error fetching Networks");
+            }
+            resolve(networks);
+        });
+    });
+}
+
 const containerList = async (options = {all: true}) => {
     validateOperation('list');
     
@@ -138,6 +165,163 @@ const createContainer = async (imageName, tagName = 'latest', containerName) => 
     });
 };
 
+const createVolume=async(volumeName)=>{
+     const volumeConfig={
+        Name:volumeName,
+        Driver:'local'
+     };
+     validateOperation('create',volumeConfig);
+     
+     return new Promise((resolve,reject)=>{
+        docker.createVolume(volumeConfig,(err,volume)=>{
+            if(err){
+                console.error("Error in creating the volume:",err);
+                return reject(new Error("Error in creating the volume"));
+            }
+            resolve(volume);
+        });
+        });    
+}
+
+const createNetwork=async(networkName)=>{
+    const networkConfig={
+        Name:networkName,
+        Driver:'bridge'
+    }
+    validateOperation('create',networkConfig);
+    return new Promise((resolve,reject)=>{
+        docker.createNetwork(networkConfig,(err,network)=>{
+            if(err){
+                console.error("Error in creating the network:",err);
+                return reject(new Error("Error in creating the network"));
+            }
+            resolve(network);
+        });
+    })
+}
+
+const deleteVolume=async(volumeName)=>{
+    validateOperation('remove');
+    const volume=docker.getVolume(volumeName);
+    return new Promise((resolve,reject)=>{
+        volume.remove((err,data)=>{
+            if(err){
+                console.error("Error in deleting the volume:",err);
+                return reject(new Error("Error in deleting the volume"));
+            }
+            resolve(data);
+        });
+    });
+}
+
+const deleteNetwork=async(networkName)=>{
+    validateOperation('remove');
+    const network=docker.getNetwork(networkName);
+    return new Promise((resolve,reject)=>{
+        network.remove((err,data)=>{
+            if(err){
+                console.error("Error in deleting the network:",err);
+                return reject(new Error("Error in deleting the network"));
+            }
+            resolve(data);
+        })
+    })
+}
+
+const inspectVolume=async(volumeName)=>{
+    validateOperation('inspect');
+    const volume=docker.getVolume(volumeName);
+    return new Promise((resolve,reject)=>{
+        volume.inspect((err,data)=>{
+            if(err){
+                console.error("Error in inspecting the volume:",err);
+                return reject(new Error("Error in inspecting the volume"));
+            }
+            resolve(data);
+        });
+    });
+}
+
+const inspectNetwork=async(networkName)=>{
+    validateOperation('inspect');
+    const network=docker.getNetwork(networkName);
+    return new Promise((resolve,reject)=>{
+        network.inspect((err,data)=>{
+            if(err){
+                console.error("Error in inspecting the network:",err);
+                return reject(new Error("Error in inspecting the network"));
+            }
+            resolve(data);
+        });
+    });
+}
+
+
+const pruneNetworks=async()=>{
+    validateOperation('remove');
+    return new Promise((resolve,reject)=>{
+        docker.pruneNetworks((err,data)=>{
+            if(err){
+                console.error("Error in deleting unused networks:",err);
+                return reject(new Error("Error in deleting unused networks"));
+            }
+            resolve(data);
+        });
+    });
+}
+
+const pruneVolumes=async()=>{
+    validateOperation('remove');
+    return new Promise((resolve,reject)=>{
+        docker.pruneVolumes((err,data)=>{
+            if(err){
+                console.error("Error in deleting unused volumes:",err);
+                return reject(new Error("Error in deleting unused volumes"));
+            }
+            resolve(data);
+        });
+    });
+}
+
+const pruneContainers=async()=>{
+    validateOperation('remove');
+    return new Promise((resolve,reject)=>{
+        docker.pruneContainers((err,data)=>{
+            if(err){
+                console.error("Error in deleting unused containers:",err);
+                return reject(new Error("Error in deleting unused containers"));
+            }
+            resolve(data);
+        });
+    });
+}
+
+const pruneImages=async()=>{
+    validateOperation('remove');
+    return new Promise((resolve,reject)=>{
+        docker.pruneImages((err,data)=>{
+            if(err){
+                console.error("Error in deleting unused images:",err);
+                return reject(new Error("Error in deleting unused images"));
+            }
+            resolve(data);
+        });
+    });
+}
+
+const systemInfo=async()=>{
+    validateOperation('list');
+    return new Promise((resolve,reject)=>{
+        docker.info((err,data)=>{
+            if(err){
+                console.error("Error in fetching system info:",err);
+                return reject(new Error("Error in fetching system info"));
+            }
+            resolve(data);
+        })
+    })
+}
+
 const formatContainerData = (containers) => {
     return containers.map((container) => ({
         id: container.Id,
@@ -208,5 +392,18 @@ module.exports = {
     formatContainerData,
     formatImageData,
     setupDockerEvents,
-    docker
+    volumeList,
+    createVolume,
+    deleteVolume,
+    inspectVolume,
+    networkList,
+    createNetwork,
+    deleteNetwork,
+    inspectNetwork,
+    pruneNetworks,
+    pruneVolumes,
+    pruneContainers,
+    pruneImages,
+    systemInfo,
+    docker,
 };

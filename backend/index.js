@@ -13,7 +13,20 @@ const {
     createContainer,
     formatContainerData,
     formatImageData,
-    setupDockerEvents
+    setupDockerEvents,
+    volumeList,
+    createVolume,
+    deleteVolume,
+    inspectVolume,
+    networkList,
+    createNetwork,
+    deleteNetwork,
+    inspectNetwork,
+    pruneNetworks,
+    pruneVolumes,
+    pruneContainers,
+    pruneImages,
+    systemInfo,
 } = require('./utils');
 
 const app = express();
@@ -67,6 +80,54 @@ app.get("/api/images", async (req, res) => {
     }
 });
 
+app.get("/api/volumes", async(req,res)=>{
+    try {
+        const volumes=await volumeList();
+        res.status(200).json({message:"Volumes fetched successfully",data:volumes});
+    } catch (error) {
+        console.error("Error in fetching the volumes:", error);
+        return res.status(500).send("Error fetching Volumes, Please refresh the page..");
+    }
+});
+
+app.get("/api/networks", async(req,res)=>{
+    try {
+       const networks=await networkList();
+       res.status(200).json({message:"Networks fetched successfully",data:networks}); 
+    } catch (error) {
+        console.error("Error in fetching the networks:", error);
+        return res.status(500).send("Error fetching Networks, Please refresh the page..");
+    }
+});
+
+app.get("/api/volume-inspect/:id", async(req,res)=>{
+    const volumeId=req.params.id;
+    if(!volumeId){
+        return res.status(400).send("Volume ID is required");
+    }
+    try {
+        const volume = await inspectVolume(volumeId);
+        res.status(200).json({ message: "Volume inspected successfully", data: volume });
+    } catch (error) {
+        console.error("Error in inspecting the volume:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
+app.get("/api/network-inspect/:id", async(req,res)=>{
+    const networkId=req.params.id;
+    if(!networkId){
+        return res.status(400).send("Network ID is required");
+    }
+    try {
+        const network = await inspectNetwork(networkId);
+        res.status(200).json({ message: "Network inspected successfully", data: network });
+    } catch (error) {
+        console.error("Error in inspecting the network:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
 app.post("/api/container-Action", async (req, res) => {
     const { containerId, type } = req.body;
     
@@ -112,6 +173,112 @@ app.post("/api/pull-image", async (req, res) => {
         res.status(200).json({ message: "Image pulled successfully", data: image });
     } catch (error) {
         console.error("Error in pulling the image:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
+app.post("/api/create-volume", async(req,res)=>{
+    const {volumeName}=req.body;
+    if(!volumeName){
+        return res.status(400).send("Volume name is required");
+    }
+    try {
+        const volume = await createVolume(volumeName);
+        res.status(200).json({ message: "Volume created successfully", data: volume });
+    } catch (error) {
+        console.error("Error in creating the volume:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
+app.post("/api/delete-volume", async(req,res)=>{
+    const {volumeName}=req.body;
+    if(!volumeName){
+        return res.status(400).send("Volume name is required");
+    }
+    try {
+        const result = await deleteVolume(volumeName);
+        res.status(200).json({ message: "Volume deleted successfully", data: result });
+    } catch (error) {
+        console.error("Error in deleting the volume:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
+app.post("/api/create-network", async(req,res)=>{
+    const {networkName}=req.body;
+    if(!networkName){
+        return res.status(400).send("Network name is required");
+    }
+    try {
+        const network = await createNetwork(networkName);
+        res.status(200).json({ message: "Network created successfully", data: network });
+    } catch (error) {
+        console.error("Error in creating the network:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
+app.delete("/api/delete-network", async(req,res)=>{
+    const {networkId}=req.body;
+    if(!networkId){
+        return res.status(400).send("Network ID is required");
+    }
+    try {
+        const result = await deleteNetwork(networkId);
+        res.status(200).json({ message: "Network deleted successfully", data: result });
+    } catch (error) {
+        console.error("Error in deleting the network:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
+app.delete("/api/prune-networks", async(req,res)=>{
+    try {
+        const result = await pruneNetworks();
+        res.status(200).json({ message: "Unused networks pruned successfully", data: result });
+    } catch (error) {
+        console.error("Error in pruning the networks:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
+app.delete("/api/prune-volumes", async(req,res)=>{
+    try {
+        const result = await pruneVolumes();
+        res.status(200).json({ message: "Unused volumes pruned successfully", data: result });
+    } catch (error) {
+        console.error("Error in pruning the volumes:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
+app.delete("/api/prune-containers", async(req,res)=>{
+    try {
+        const result = await pruneContainers();
+        res.status(200).json({ message: "Unused containers pruned successfully", data: result });
+    } catch (error) {
+        console.error("Error in pruning the containers:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
+app.delete("/api/prune-images", async(req,res)=>{
+    try {
+        const result = await pruneImages();
+        res.status(200).json({ message: "Unused images pruned successfully", data: result });
+    } catch (error) {
+        console.error("Error in pruning the images:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
+app.get("/api/system-info", async(req,res)=>{
+    try {
+        const info = await systemInfo();
+        res.status(200).json({ message: "System information retrieved successfully", data: info });
+    } catch (error) {
+        console.error("Error in retrieving system information:", error);
         return res.status(500).send(error.message," Please refresh the page..");
     }
 });
