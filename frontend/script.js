@@ -357,7 +357,7 @@ function renderVolumes() {
             <div class="volume-card">
                 <div class="container-header">
                     <div>
-                        <div class="volume-name">${name.slice(0,10)}</div>
+                        <div class="volume-name">${name.slice(0,25)}</div>
                         <div class="volume-driver">${driver}</div>
                     </div>
                 </div>
@@ -365,7 +365,7 @@ function renderVolumes() {
                 <div class="volume-info">
                     <div class="info-row">
                         <span class="info-label">Mountpoint:</span>
-                        <span class="info-value">${mountpoint.slice(16,35)}</span>
+                        <span class="info-value">${mountpoint.slice(16,38)}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Created:</span>
@@ -453,6 +453,29 @@ async function deleteNetwork(networkId) {
     }
 }
 
+async function removeImage(imageId){
+    if (!confirm('Are you sure you want to delete this image?')) return;
+    showLoading(true);
+    try {
+        const response=await fetch(`${API_BASE}/delete-image`,{
+            method:'DELETE',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({imageId})
+        });
+        if(response.ok){
+            showToast('Image deleted successfully','success');
+            await loadImages();
+        } else {
+            throw new Error('Failed to delete image, please refresh and ensure no containers are using this image');
+        }
+    } catch (error) {
+        showToast(error.message, 'error');
+        console.error('Error deleting image:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
 // Volume actions
 async function inspectVolume(volumeName) {
     try {
@@ -476,7 +499,7 @@ async function deleteVolume(volumeName) {
     showLoading(true);
     try {
         const response = await fetch(`${API_BASE}/delete-volume`, {
-            method: 'POST',
+            method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ volumeName })
         });
@@ -755,6 +778,9 @@ function renderImages() {
                 <div class="container-actions">
                     <button class="btn btn-primary btn-small" onclick="createContainerFromImage('${mainTag}')">
                         <span class="btn-icon">▶️</span> Create Container
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="removeImage('${image.id}')">
+                        <span class="btn-icon">🗑️</span> Remove
                     </button>
                 </div>
             </div>

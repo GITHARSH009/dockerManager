@@ -235,6 +235,20 @@ const deleteNetwork=async(networkName)=>{
     })
 }
 
+const removeImage=async(imageId)=>{
+    validateOperation('remove');
+    const image=docker.getImage(imageId);
+    return new Promise((resolve,reject)=>{
+         image.remove((err,data)=>{
+            if(err){
+                console.error("Error in deleting the image:",err);
+                return reject(new Error("Error in deleting the image"));
+            }
+            resolve(data);
+         });
+    });
+}
+
 const inspectVolume=async(volumeName)=>{
     validateOperation('inspect');
     const volume=docker.getVolume(volumeName);
@@ -373,6 +387,7 @@ const setupDockerEvents = (proxyMap) => {
                     const exposedPorts = containerInfo.Config.ExposedPorts;
                     let defaultPort = null;
                     
+                    // Check if container has exposed ports
                     if (exposedPorts && Object.keys(exposedPorts).length > 0) {
                         const [port, type] = Object.keys(exposedPorts)[0].split('/');
                         if (type === 'tcp') {
@@ -380,10 +395,31 @@ const setupDockerEvents = (proxyMap) => {
                         }
                     }
                     
-                    console.log(`Registering the container: ${containerName}.localhost to the url at http://${ipAddress}:${defaultPort}`);
-                    proxyMap.set(containerName, { ip: ipAddress, port: defaultPort });
+                    // Only register containers that have exposed ports (web services)
+                    if (defaultPort) {
+                        console.log(`Registering the container: ${containerName}.localhost to the url at http://${ipAddress}:${defaultPort}`);
+                        proxyMap.set(containerName, { ip: ipAddress, port: defaultPort });
+                    } else {
+                        console.log(`Skipping container ${containerName} - no exposed ports (not a web service)`);
+                    }
                 } catch (inspectError) {
                     console.error("Error inspecting container:", inspectError);
+                }
+            }
+            
+            // Clean up proxy map when container stops
+            if (eventData.Type === 'container' && (eventData.Action === 'stop' || eventData.Action === 'die')) {
+                try {
+                    const currentContainer = docker.getContainer(eventData.id);
+                    const containerInfo = await currentContainer.inspect();
+                    const containerName = containerInfo.Name.replace('/', '');
+                    
+                    if (proxyMap.has(containerName)) {
+                        proxyMap.delete(containerName);
+                        console.log(`Removed container ${containerName} from proxy map`);
+                    }
+                } catch (inspectError) {
+                    console.error("Error cleaning up stopped container:", inspectError);
                 }
             }
         });
@@ -412,5 +448,6 @@ module.exports = {
     pruneContainers,
     pruneImages,
     systemInfo,
+    removeImage,
     docker,
 };

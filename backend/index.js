@@ -27,6 +27,8 @@ const {
     pruneContainers,
     pruneImages,
     systemInfo,
+    removeImage,
+    docker,
 } = require('./utils');
 
 const app = express();
@@ -191,7 +193,7 @@ app.post("/api/create-volume", async(req,res)=>{
     }
 });
 
-app.post("/api/delete-volume", async(req,res)=>{
+app.delete("/api/delete-volume", async(req,res)=>{
     const {volumeName}=req.body;
     if(!volumeName){
         return res.status(400).send("Volume name is required");
@@ -273,6 +275,20 @@ app.delete("/api/prune-images", async(req,res)=>{
     }
 });
 
+app.delete("/api/delete-image", async(req,res)=>{
+    const {imageId} =req.body;
+    if(!imageId){
+        return res.status(400).send("Image ID is required");
+    }
+    try {
+        const result = await removeImage(imageId);
+        res.status(200).json({ message: "Image deleted successfully", data: result });
+    } catch (error) {
+        console.error("Error in deleting the image:", error);
+        return res.status(500).send(error.message," Please refresh the page..");
+    }
+});
+
 app.get("/api/system-info", async(req,res)=>{
     try {
         const info = await systemInfo();
@@ -290,22 +306,65 @@ const proxyServer = http.createServer(function(req, res) {
     
     if (proxyMap.has(container)) {
         const { ip, port } = proxyMap.get(container);
-        console.log(`Proxying request at host: ${hostname} to target:---> http://${ip}:${port}`);
+        
+        // Validate port before proxying
+        if (!port || port === 'null') {
+            console.log(`Container ${container} has no exposed port - cannot proxy`);
+            res.writeHead(503, { 'Content-Type': 'text/html' });
+            res.end(`
+                <h1>Web Service Unavailable For This Container</h1>
+                <p>Container "${container}" is running but doesn't expose any web ports.</p>
+                <p>This container may not be running a web service.</p>
+                <p>For web services, make sure your container exposes a port (e.g., Like Nginx Container)</p>
+            `);
+            return;
+        }
+        
+        console.log(`Proxying request at host: ${hostname} to target: http://${ip}:${port}`);
         const targetUrl = `http://${ip}:${port}`;
-        return proxy.web(req, res, { target: targetUrl, changeOrigin: true, ws: true });
+        
+        // Handle proxy errors
+        proxy.web(req, res, { 
+            target: targetUrl, 
+            changeOrigin: true, 
+            ws: true 
+        }, (err) => {
+            console.error(`Proxy error for ${container}:`, err.message);
+            if (!res.headersSent) {
+                res.writeHead(502, { 'Content-Type': 'text/html' });
+                res.end(`
+                    <h1>Bad Gateway</h1>
+                    <p>Container May Not Running A Web Service "${container}"</p>
+                    <p>The container may be starting up or not running a web service on port ${port}</p>
+                    <p>Error: ${err.message}</p>
+                `);
+            }
+        });
+    } else {
+        res.writeHead(404, { 'Content-Type': 'text/html' });
+        res.end(`
+            <h1>Container Is Not Running A Web Service</h1>
+            <p>No running web service found for "${container}"</p>
+            <p>Make sure your container is running and exposes a web port.</p>
+        `);    
     }
-    
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Container not found');    
 });
 
 proxyServer.on('upgrade', function(req, socket, head) {
-    const hostname = req.url.hostname;
+    const hostname = req.headers.host;
     const container = hostname.split('.')[0];
     
     if (proxyMap.has(container)) {
         const { ip, port } = proxyMap.get(container);
-        console.log(`Upgrading request to container: ${container} at http://${ip}:${port}`);
+        
+        if (!port || port === 'null') {
+            console.log(`WebSocket upgrade failed - container ${container} has no exposed port`);
+            socket.write('HTTP/1.1 503 Service Unavailable\r\n\r\n');
+            socket.destroy();
+            return;
+        }
+        
+        console.log(`Upgrading WebSocket request to container: ${container} at http://${ip}:${port}`);
         const targetUrl = `http://${ip}:${port}`;
         proxy.ws(req, socket, head, { target: targetUrl });
     } else {
