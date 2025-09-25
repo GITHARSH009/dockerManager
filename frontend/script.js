@@ -357,7 +357,7 @@ function renderVolumes() {
             <div class="volume-card">
                 <div class="container-header">
                     <div>
-                        <div class="volume-name">${name}</div>
+                        <div class="volume-name">${name.slice(0,10)}</div>
                         <div class="volume-driver">${driver}</div>
                     </div>
                 </div>
@@ -365,7 +365,7 @@ function renderVolumes() {
                 <div class="volume-info">
                     <div class="info-row">
                         <span class="info-label">Mountpoint:</span>
-                        <span class="info-value">${mountpoint}</span>
+                        <span class="info-value">${mountpoint.slice(16,35)}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Created:</span>
