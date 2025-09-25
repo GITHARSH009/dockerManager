@@ -23,7 +23,7 @@ This application uses a **single container approach** where:
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone <repo-url>
 cd docker-management
 
 # Build and run with docker-compose
@@ -33,14 +33,15 @@ docker-compose up --build
 docker-compose up -d --build
 ```
 
-### Option 2: Using Docker Run
-
+### 🐳 Run from Docker Hub
 ```bash
+# Required command (Docker socket mount is mandatory)
 docker run -d \
   -p 3000:3000 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --name docker-manager \
-  yourusername/docker-manager:latest
+  --restart unless-stopped \
+  harshsingh95/docker-manager:latest
 ```
 
 ### Option 3: Local Development
@@ -75,23 +76,6 @@ Once running, access the Docker Manager at:
 | POST | `/api/create-container` | Create new container |
 | POST | `/api/pull-image` | Pull Docker image |
 
-## Project Structure
-
-```
-docker-management/
-├── frontend/           # Static web files
-│   ├── index.html     # Main UI
-│   ├── styles.css     # Styling
-│   └── script.js      # Frontend logic
-├── backend/           # Express server
-│   ├── index.js       # Main server file
-│   ├── package.json   # Dependencies
-│   └── .gitignore
-├── Dockerfile         # Container build instructions
-├── docker-compose.yml # Multi-container orchestration
-├── .dockerignore      # Docker build exclusions
-└── README.md
-```
 
 ## Requirements
 

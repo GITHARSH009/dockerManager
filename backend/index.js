@@ -44,6 +44,7 @@ const proxy = httpProxy.createProxyServer({
     changeOrigin: true,
     ws: true
 });
+const server = http.createServer(app);
 
 const proxyMap = new Map();
 
@@ -381,3 +382,60 @@ proxyServer.listen(80, () => {
 app.listen(3000, () => {
     console.log("Server is running on port 3000");
 });
+
+const gracefulShutdown = () => {
+    console.log('Received shutdown signal, closing servers...');
+    
+    let serversToClose = 2;
+    let hasExited = false;
+    
+    const tryExit = () => {
+        serversToClose--;
+        if (serversToClose <= 0 && !hasExited) {
+            hasExited = true;
+            console.log('All servers closed successfully');
+            process.exit(0);
+        }
+    };
+    
+    // Close main server
+    if (server && server.listening) {
+        server.close((err) => {
+            if (err) {
+                console.error('Error closing main server:', err);
+            } else {
+                console.log('Main server closed');
+            }
+            tryExit();
+        });
+    } else {
+        console.log('Main server already closed or not running');
+        tryExit();
+    }
+    
+    // Close proxy server
+    if (proxyServer && proxyServer.listening) {
+        proxyServer.close((err) => {
+            if (err) {
+                console.error('Error closing proxy server:', err);
+            } else {
+                console.log('Proxy server closed');
+            }
+            tryExit();
+        });
+    } else {
+        console.log('Proxy server already closed or not running');
+        tryExit();
+    }
+    
+    // Force exit after 10 seconds if servers don't close gracefully
+    setTimeout(() => {
+        if (!hasExited) {
+            console.log('Force closing after timeout');
+            process.exit(1);
+        }
+    }, 10000);
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
